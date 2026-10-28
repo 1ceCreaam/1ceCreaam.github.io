@@ -1,0 +1,961 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>FakeEng</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{
+  --bg:var(--tg-theme-bg-color,#0f1117);--text:var(--tg-theme-text-color,#f2f3f5);
+  --hint:var(--tg-theme-hint-color,#8b90a0);--card:var(--tg-theme-secondary-bg-color,#1a1d27);
+  --accent:var(--tg-theme-button-color,#7c5cff);--accent-text:var(--tg-theme-button-text-color,#fff);
+  --ok:#22c55e;--bad:#ef4444;--warn:#f59e0b;--line:rgba(127,127,127,.22);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding-bottom:calc(78px + env(safe-area-inset-bottom))}
+main{padding:16px;max-width:640px;margin:0 auto}
+.view{display:none;animation:fade .25s ease}.view.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+h2{font-size:21px;margin:4px 0 14px}
+.card{background:var(--card);border-radius:18px;padding:16px;margin-bottom:12px}
+.card-title{font-weight:700;margin-bottom:8px}
+.muted{color:var(--hint);font-size:13px}.mt{margin-top:10px}.center{text-align:center}.gap{height:12px}
+.big{font-size:42px}.stack{display:grid;gap:8px;margin-top:12px}
+.row-between{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.theory{white-space:pre-wrap;word-wrap:break-word}
+.theory code,.msg code,.sub code{background:rgba(127,127,127,.18);padding:1px 5px;border-radius:6px}
+.hero{background:linear-gradient(135deg,#7c5cff,#e2549b 60%,#ff9f43);color:#fff;border-radius:22px;padding:20px;margin-bottom:12px;position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;right:-50px;top:-50px;width:170px;height:170px;border-radius:50%;background:rgba(255,255,255,.13)}
+.hero .hi{font-size:23px;font-weight:800}.hero .sub{opacity:.9;margin-top:2px;font-style:italic}
+.pills{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;position:relative;z-index:1}
+.pill{background:rgba(255,255,255,.22);padding:6px 12px;border-radius:999px;font-size:13px;font-weight:700}
+.trial{background:linear-gradient(135deg,rgba(245,158,11,.22),rgba(226,84,155,.18))}
+.btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;border:0;border-radius:14px;padding:13px 16px;font:inherit;font-weight:700;background:var(--accent);color:var(--accent-text);cursor:pointer;transition:transform .1s,opacity .2s}
+.btn:active{transform:scale(.97)}.btn:disabled{opacity:.5}
+.btn.secondary{background:transparent;color:var(--text);border:1.5px solid var(--line)}
+.link{background:none;border:0;color:var(--accent);font:inherit;font-weight:700;cursor:pointer;padding:0}
+.mini{border:0;background:rgba(127,127,127,.16);color:var(--text);border-radius:10px;padding:6px 10px;font:inherit;font-size:13px;cursor:pointer}
+.mini:disabled{opacity:.5}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.quick{background:var(--card);border:0;border-radius:18px;padding:14px;text-align:left;color:var(--text);display:flex;flex-direction:column;gap:2px;font:inherit;cursor:pointer}
+.quick span{font-size:26px}.quick small{color:var(--hint)}.quick:active{transform:scale(.97)}
+.phrase{font-size:25px;font-weight:800;margin:2px 0}
+.meaning{font-weight:700;margin-top:8px}
+.example{font-style:italic;margin:8px 0;padding-left:10px;border-left:3px solid var(--accent)}
+.limit{margin-top:10px}.bar{height:8px;background:var(--line);border-radius:99px;overflow:hidden;margin-top:6px}
+.bar>i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .4s}
+select,input,textarea{width:100%;background:var(--bg);color:var(--text);border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;font:inherit;outline:none}
+select{margin-bottom:12px;background:var(--card)}textarea{resize:none}textarea.tall{height:96px}
+input:focus,textarea:focus{border-color:var(--accent)}
+.tag{display:inline-block;font-size:12px;font-weight:700;padding:4px 9px;border-radius:9px;background:rgba(124,92,255,.18);color:var(--accent)}
+.question{font-size:19px;font-weight:800;margin:12px 0 6px;line-height:1.35}
+.ru{color:var(--hint);font-style:italic;margin-bottom:6px}
+.opt{display:flex;gap:12px;align-items:center;width:100%;text-align:left;background:var(--bg);border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;margin-top:8px;color:var(--text);font:inherit;cursor:pointer;transition:border-color .2s,background .2s}
+.opt b{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:rgba(127,127,127,.15);flex:none}
+.opt.ok{border-color:var(--ok);background:rgba(34,197,94,.13)}.opt.bad{border-color:var(--bad);background:rgba(239,68,68,.13)}
+.tools{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.hint{background:rgba(245,158,11,.13);border-radius:12px;padding:10px 12px;margin-top:8px}
+.result{border-radius:14px;padding:14px;margin-top:12px;background:rgba(127,127,127,.1);white-space:pre-wrap;word-wrap:break-word}
+.result.ok{background:rgba(34,197,94,.13)}.result.bad{background:rgba(239,68,68,.13)}
+.res-title{font-weight:800;font-size:17px;margin-bottom:6px}
+.seg{display:flex;background:var(--card);border-radius:12px;padding:4px;margin-bottom:12px;gap:2px}
+.seg button{flex:1;border:0;background:none;color:var(--hint);padding:9px 4px;border-radius:9px;font:inherit;font-size:14px;font-weight:700;cursor:pointer}
+.seg button.active{background:var(--accent);color:var(--accent-text)}
+.chips{display:flex;gap:8px;overflow-x:auto;margin-bottom:12px;padding-bottom:2px}
+.chip{flex:none;border:0;border-radius:999px;padding:8px 14px;background:var(--card);color:var(--text);font:inherit;font-weight:700;cursor:pointer}
+.chip.active{background:var(--accent);color:var(--accent-text)}
+.list-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 14px;background:var(--card);border-radius:14px;margin-bottom:8px;cursor:pointer}
+.list-item:active{opacity:.8}.list-item.disabled{opacity:.5}.li-title{font-weight:600}
+.lock{text-align:center}
+.chat{display:flex;flex-direction:column;gap:8px;min-height:40vh}
+.msg{max-width:88%;padding:10px 13px;border-radius:16px;white-space:pre-wrap;word-wrap:break-word}
+.msg.me{align-self:flex-end;background:var(--accent);color:var(--accent-text);border-bottom-right-radius:5px}
+.msg.bot{align-self:flex-start;background:var(--card);border-bottom-left-radius:5px}
+.msg.note{align-self:center;color:var(--hint);font-size:13px;padding:2px}
+.acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;white-space:normal}
+.sub{margin-top:8px;padding:9px 11px;border-radius:12px;background:rgba(127,127,127,.12);white-space:pre-wrap;word-wrap:break-word}
+.typing span{display:inline-block;width:7px;height:7px;margin:0 2px;border-radius:50%;background:var(--hint);animation:bl 1s infinite}
+.typing span:nth-child(2){animation-delay:.2s}.typing span:nth-child(3){animation-delay:.4s}
+@keyframes bl{0%,80%,100%{opacity:.3}40%{opacity:1}}
+.composer{position:sticky;bottom:calc(72px + env(safe-area-inset-bottom));display:flex;gap:8px;padding:10px 0 4px;background:var(--bg)}
+.composer textarea{height:46px}.composer .btn{width:56px;flex:none}
+.player{width:100%;border-radius:14px;background:#000;margin-top:4px}audio.player{background:none}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.stat{background:var(--card);border-radius:16px;padding:14px}.stat b{display:block;font-size:24px}
+.profile-head{display:flex;gap:14px;align-items:center}
+.avatar{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#7c5cff,#e2549b);display:grid;place-items:center;color:#fff;font-size:24px;font-weight:800;flex:none}
+.tier-title{font-weight:800;font-size:18px;margin-bottom:8px}
+.tier-pro{background:linear-gradient(135deg,rgba(124,92,255,.25),rgba(226,84,155,.2))}
+.price-row{display:flex;justify-content:space-between;align-items:center;width:100%;padding:12px 2px;border:0;border-top:1px solid var(--line);background:none;color:var(--text);font:inherit;cursor:pointer}
+.price-row b{color:var(--accent)}.price-row:disabled{opacity:.5}
+.skeleton{height:18px;border-radius:8px;background:linear-gradient(90deg,rgba(127,127,127,.12),rgba(127,127,127,.26),rgba(127,127,127,.12));background-size:200% 100%;animation:sh 1.2s infinite;margin:8px 0}
+@keyframes sh{to{background-position:-200% 0}}
+.tabs{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--card);padding:6px 6px calc(6px + env(safe-area-inset-bottom));border-top:1px solid var(--line);z-index:10}
+.tabs button{flex:1;background:none;border:0;color:var(--hint);font:inherit;font-size:11px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:1px;padding:5px 0;cursor:pointer}
+.tabs button span{font-size:22px;filter:grayscale(.6)}.tabs button.active{color:var(--accent)}.tabs button.active span{filter:none}
+.sheet{position:fixed;inset:0;background:var(--bg);z-index:30;transform:translateY(100%);transition:transform .28s ease;overflow-y:auto;padding:0 16px calc(24px + env(safe-area-inset-bottom))}
+.sheet.open{transform:none}
+.sheet-head{display:flex;align-items:center;gap:12px;position:sticky;top:0;background:var(--bg);padding:14px 0;z-index:1}
+.icon-btn{border:0;background:var(--card);color:var(--text);width:36px;height:36px;border-radius:50%;font-size:16px;flex:none;cursor:pointer}
+.toast{position:fixed;left:50%;top:14px;transform:translateX(-50%);background:rgba(20,20,24,.95);color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:50;max-width:90%}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<main>
+  <section id="view-home" class="view active">
+    <div class="hero">
+      <div class="hi" id="hi">Привет! 👋</div>
+      <div class="sub">“Less Grammar. More Talking.”</div>
+      <div class="pills" id="hero-pills"></div>
+    </div>
+    <div class="card trial" id="trial-card" hidden></div>
+    <div class="card" id="phrase-card"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+    <div class="grid2">
+      <button class="quick" data-go="tasks"><span>🧩</span><b>Задание</b><small>практика по уровню</small></button>
+      <button class="quick" data-go="learn"><span>🎓</span><b>Курс A1–C1</b><small>уроки и справочник</small></button>
+      <button class="quick" data-go="chat"><span>💬</span><b>Разговор</b><small>только английский</small></button>
+      <button class="quick" data-go="rp"><span>🎭</span><b>Roleplay</b><small>живые сцены</small></button>
+      <button class="quick" data-go="tracks"><span>🎬</span><b>Треки</b><small>видео и аудио</small></button>
+      <button class="quick" data-go="level"><span>🎯</span><b>Мой уровень</b><small>тест из 3 фраз</small></button>
+    </div>
+    <div class="card"><div class="card-title">Лимиты на сегодня</div><div id="limits"><div class="skeleton"></div></div></div>
+  </section>
+
+  <section id="view-tasks" class="view">
+    <h2>Задания</h2>
+    <div id="mode-banner" class="card" hidden></div>
+    <div id="type-wrap"><select id="task-type"><option value="">🎲 Под мой уровень</option></select></div>
+    <div id="task-area"></div>
+  </section>
+
+  <section id="view-learn" class="view">
+    <h2>Учёба</h2>
+    <div class="seg"><button data-learn="course" class="active">🎓 Курс</button><button data-learn="ref">📖 Справочник</button></div>
+    <div id="learn-area"></div>
+  </section>
+
+  <section id="view-practice" class="view">
+    <h2>Практика</h2>
+    <div class="seg">
+      <button data-practice="chat" class="active">💬 Чат</button>
+      <button data-practice="rp">🎭 Roleplay</button>
+      <button data-practice="roast">🔥 Roast</button>
+      <button data-practice="tracks">🎬 Треки</button>
+    </div>
+    <div class="panel" id="p-chat"></div>
+    <div class="panel" id="p-rp" hidden><div id="rp-area"></div></div>
+    <div class="panel" id="p-roast" hidden></div>
+    <div class="panel" id="p-tracks" hidden><div id="tracks-area"></div></div>
+  </section>
+
+  <section id="view-profile" class="view">
+    <h2>Профиль</h2>
+    <div id="profile-area"><div class="card"><div class="skeleton"></div><div class="skeleton"></div></div></div>
+    <div id="pricing-area"></div>
+  </section>
+</main>
+
+<nav class="tabs">
+  <button data-view="home" class="active"><span>🏠</span>Главная</button>
+  <button data-view="tasks"><span>🧩</span>Задания</button>
+  <button data-view="learn"><span>🎓</span>Учёба</button>
+  <button data-view="practice"><span>💬</span>Практика</button>
+  <button data-view="profile"><span>👤</span>Профиль</button>
+</nav>
+
+<div id="sheet" class="sheet">
+  <div class="sheet-head"><button class="icon-btn" id="sheet-close">✕</button><b id="sheet-title"></b></div>
+  <div id="sheet-body"></div>
+</div>
+<div id="toast" class="toast"></div>
+
+<script>
+const tg = window.Telegram && window.Telegram.WebApp;
+const $ = (s) => document.querySelector(s);
+const LETTERS = 'ABCD';
+const KIND = {blank: 'вставь слово', choice: 'выбор ответа', judge: 'свой ответ'};
+const TYPING = '<span class="typing"><span></span><span></span><span></span></span>';
+const state = {me: null, view: 'home', mode: {mode: 'free'}, task: null, busy: false,
+               learnTab: 'course', learnToken: 0, courseLevel: null, practiceTab: 'chat', inited: {}, pricing: null};
+
+// ---------- утилиты ----------
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text != null) e.textContent = text;
+  return e;
+}
+function rich(tag, cls, h) { const e = el(tag, cls); e.innerHTML = h || ''; return e; }
+function btn(label, cls, fn) { const b = el('button', cls || 'btn', label); b.type = 'button'; b.onclick = fn; return b; }
+function plain(h) { const d = document.createElement('div'); d.innerHTML = h || ''; return d.textContent; }
+function bar(frac) { const b = el('div', 'bar'), i = el('i'); i.style.width = Math.max(0, Math.min(100, 100 * frac)) + '%'; b.append(i); return b; }
+function toast(text) {
+  const t = $('#toast'); t.textContent = text; t.classList.add('show');
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 2600);
+}
+function haptic(kind) { try { tg.HapticFeedback.notificationOccurred(kind); } catch (e) {} }
+function tap() { try { tg.HapticFeedback.impactOccurred('light'); } catch (e) {} }
+function tgUser() { return (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || {}; }
+function speak(text) {
+  try {
+    const u = new SpeechSynthesisUtterance(text); u.lang = 'en-US';
+    speechSynthesis.cancel(); speechSynthesis.speak(u);
+  } catch (e) { toast('Озвучка недоступна на этом устройстве'); }
+}
+function monthsLabel(n) { return n === 1 ? '1 месяц' : (n < 5 ? `${n} месяца` : `${n} месяцев`); }
+
+async function api(path, body) {
+  const mkErr = (code, h) => { const e = new Error(code); e.code = code; e.html = h; return e; };
+  if (!tg || !tg.initData) throw mkErr('no_init', 'Открой приложение через кнопку в боте.');
+  let r;
+  try {
+    r = await fetch('api/' + path, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'X-Telegram-Init-Data': tg.initData},
+      body: JSON.stringify(body || {}),
+    });
+  } catch (e) { throw mkErr('net', 'Нет связи с сервером. Проверь интернет.'); }
+  let data = {};
+  try { data = await r.json(); } catch (e) {}
+  if (!r.ok) throw mkErr(data.error || 'http_' + r.status, data.html || 'Что-то пошло не так. Попробуй ещё раз.');
+  return data;
+}
+
+// Кнопка с ожиданием: блокируется на время запроса, ошибки показываются тостом
+async function run(b, fn) {
+  if (b && b.disabled) return;
+  if (b) b.disabled = true;
+  try { await fn(); }
+  catch (e) { toast(plain(e.html) || 'Ошибка'); if (e.code === 'paywall' || e.code === 'limit') goPricing(); }
+  finally { if (b) b.disabled = false; }
+}
+function acts(parent, list) {
+  const row = el('div', 'acts');
+  list.filter(Boolean).forEach(([label, fn]) => {
+    const b = el('button', 'mini', label); b.type = 'button';
+    b.onclick = () => run(b, () => fn(b, parent));
+    row.append(b);
+  });
+  parent.append(row);
+  return row;
+}
+function sub(parent, h) { const d = rich('div', 'sub', h); parent.append(d); d.scrollIntoView({behavior: 'smooth', block: 'nearest'}); return d; }
+const actSpeak = (text) => ['🔊', () => speak(text)];
+const actTranslate = (text) => ['🇷🇺 Перевод', async (b, p) => { const r = await api('translate', {text}); sub(p, '🇷🇺 ' + r.html); b.remove(); }];
+const actBetter = (phrase) => ['🔥 Круче', async (b, p) => { const r = await api('alternatives', {text: phrase}); sub(p, r.html); b.remove(); }];
+
+function errorBox(e, onRetry) {
+  const box = el('div');
+  box.append(rich('div', 'theory', e.html));
+  if (e.code === 'paywall' || e.code === 'limit') box.append(btn('💳 Открыть тарифы', 'btn mt', goPricing));
+  else if (onRetry) box.append(btn('Повторить', 'btn secondary mt', onRetry));
+  return box;
+}
+function errorCard(e, onRetry) { const c = el('div', 'card'); c.append(errorBox(e, onRetry)); return c; }
+function loadingCard(text) {
+  const c = el('div', 'card');
+  if (text) c.append(el('div', 'muted', text));
+  c.append(el('div', 'skeleton'), el('div', 'skeleton'), el('div', 'skeleton'));
+  return c;
+}
+function lockedCard(h) {
+  const c = el('div', 'card lock');
+  c.append(rich('div', 'theory', h), btn('🔓 Открыть доступ', 'btn mt', goPricing));
+  return c;
+}
+async function lockedFor(feature, node) {
+  try { const r = await api('paywall', {feature}); node.replaceChildren(lockedCard(r.html)); }
+  catch (e) { node.replaceChildren(errorCard(e)); }
+}
+
+// ---------- навигация ----------
+function show(view) {
+  state.view = view;
+  document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + view));
+  document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('active', b.dataset.view === view));
+  window.scrollTo(0, 0);
+  if (view === 'learn') loadLearn();
+  if (view === 'practice') showPractice(state.practiceTab);
+  if (view === 'profile') { renderProfile(); loadPricing(); }
+}
+function goPractice(tab) { state.practiceTab = tab; show('practice'); }
+function goPricing() {
+  closeSheet(); show('profile');
+  setTimeout(() => $('#pricing-area').scrollIntoView({behavior: 'smooth'}), 250);
+}
+function openSheet(title, node) {
+  $('#sheet-title').textContent = title;
+  $('#sheet-body').replaceChildren(node);
+  $('#sheet').scrollTop = 0;
+  $('#sheet').classList.add('open');
+  try { tg.BackButton.show(); } catch (e) {}
+}
+function closeSheet() {
+  $('#sheet').classList.remove('open');
+  try { tg.BackButton.hide(); } catch (e) {}
+}
+
+// ---------- главная ----------
+async function loadMe() {
+  try {
+    state.me = await api('me');
+    renderHome(); fillTypes();
+    if (state.view === 'profile') renderProfile();
+  } catch (e) { $('#phrase-card').replaceChildren(errorBox(e, loadMe)); }
+}
+async function refreshMe() {
+  try { state.me = await api('me'); renderHome(); if (state.view === 'profile') renderProfile(); } catch (e) {}
+}
+function renderHome() {
+  const m = state.me;
+  $('#hi').textContent = `Привет, ${tgUser().first_name || 'друг'}! 👋`;
+  $('#hero-pills').replaceChildren(
+    el('span', 'pill', `🎯 ${m.level}`), el('span', 'pill', `🔥 ${m.streak} дн.`), el('span', 'pill', m.sub_label));
+
+  const tc = $('#trial-card');
+  if (m.trial.available) {
+    tc.hidden = false;
+    tc.replaceChildren(el('div', 'card-title', '🎁 Пробный PRO на 24 часа'),
+      el('div', 'muted', `Реши 3 задания и получи PRO бесплатно. Прогресс: ${m.trial.count}/3`),
+      bar(m.trial.count / 3),
+      btn('🧩 Решать', 'btn mt', () => { setMode({mode: 'free'}); show('tasks'); newTask(); }));
+  } else if (m.trial.active) {
+    tc.hidden = false;
+    tc.replaceChildren(el('div', 'card-title', '🔥 Пробный PRO активен'),
+      el('div', 'muted', 'Попробуй Roleplay, Roast Me и Треки, пока доступ открыт.'));
+  } else tc.hidden = true;
+
+  const p = m.phrase, c = $('#phrase-card'), head = el('div', 'row-between');
+  head.append(el('div', 'card-title', `${p.icon} Фраза дня`), btn('🔊 Послушать', 'mini', () => speak(p.phrase + '. ' + p.example)));
+  c.replaceChildren(head, el('div', 'phrase', `«${p.phrase}»`), el('div', 'muted', '📚 ' + p.source),
+    el('div', 'meaning', '🇷🇺 ' + p.meaning), el('div', 'example', `“${p.example}”`), el('div', 'muted', '🎯 ' + p.situation));
+
+  const names = {chat: '💬 Сообщения', tasks: '🧩 Задания', hints: '💡 Подсказки', level: '🎯 Оценки уровня'};
+  const L = $('#limits'); L.replaceChildren();
+  for (const [k, v] of Object.entries(m.limits)) {
+    const row = el('div', 'limit'), top = el('div', 'row-between');
+    top.append(el('span', null, names[k]), el('span', 'muted', v.limit == null ? '∞ безлимит' : `${v.used} / ${v.limit}`));
+    row.append(top, bar(v.limit == null ? 1 : v.used / v.limit));
+    L.append(row);
+  }
+}
+
+// ---------- задания ----------
+const TASK_INTRO = () => {
+  const c = el('div', 'card center');
+  c.append(el('div', 'big', '🧩'), el('div', 'card-title mt', 'Готов потренироваться?'),
+    el('div', 'muted', 'Выбери тему выше или возьми задание под свой уровень.'), el('div', 'gap'),
+    btn('Получить задание', 'btn', newTask));
+  return c;
+};
+function resetTaskArea() { $('#task-area').replaceChildren(TASK_INTRO()); }
+
+function fillTypes() {
+  const s = $('#task-type');
+  if (s.dataset.filled) return;
+  s.dataset.filled = '1';
+  let group = null, cur = null;
+  for (const t of state.me.task_types) {
+    if (t.level !== cur) { cur = t.level; group = document.createElement('optgroup'); group.label = t.level; s.append(group); }
+    const o = el('option', null, `${t.theme} · ${KIND[t.kind] || ''}`); o.value = t.id; group.append(o);
+  }
+}
+function setMode(mode) { state.mode = mode; state.task = null; renderBanner(); resetTaskArea(); }
+function renderBanner(info) {
+  const b = $('#mode-banner'), m = state.mode;
+  $('#type-wrap').hidden = m.mode !== 'free';
+  if (m.mode === 'free') { b.hidden = true; return; }
+  b.hidden = false;
+  const top = el('div', 'row-between');
+  if (m.mode === 'quiz') {
+    top.append(el('div', 'card-title', `📝 Тест: ${m.title}`), btn('Выйти', 'mini', () => setMode({mode: 'free'})));
+    b.replaceChildren(top, el('div', 'muted', 'Задания по теме без дневного лимита. Результат отмечается в справочнике.'));
+    return;
+  }
+  if (info) m.info = info;
+  const L = m.info || {answered: 0, total: 3, correct: 0, num: m.idx + 1, lessons: '?'};
+  top.append(el('div', 'card-title', `🎓 ${m.level} · Урок ${L.num}/${L.lessons}`), btn('Выйти', 'mini', () => setMode({mode: 'free'})));
+  b.replaceChildren(top, el('div', null, m.title),
+    el('div', 'muted mt', `Задание ${Math.min(L.answered + 1, L.total)} из ${L.total} · верно ${L.correct}. Для зачёта нужно 2 из 3.`),
+    bar(L.answered / L.total));
+}
+
+async function newTask() {
+  if (state.busy) return;
+  state.busy = true;
+  $('#task-area').replaceChildren(loadingCard('⏳ Генерирую задание…'));
+  const m = state.mode;
+  const body = m.mode === 'free' ? {mode: 'free', ttype: $('#task-type').value || null}
+             : m.mode === 'quiz' ? {mode: 'quiz', topic: m.topic} : {mode: 'lesson'};
+  try {
+    const t = await api('task/new', body);
+    state.task = {...t, answered: false};
+    if (t.lesson) renderBanner(t.lesson);
+    renderTask();
+  } catch (e) {
+    if (e.code === 'no_lesson') setMode({mode: 'free'});
+    $('#task-area').replaceChildren(errorCard(e, newTask));
+  } finally {
+    state.busy = false;
+    refreshMe();
+  }
+}
+
+function renderTask() {
+  const t = state.task, c = el('div', 'card'), head = el('div', 'row-between');
+  head.append(el('span', 'tag', t.theme), el('span', 'muted', t.mode === 'quiz' ? '📝 Проверка' : `№${t.number}`));
+  c.append(head, el('div', 'muted mt', '📌 ' + t.instruction), el('div', 'question', t.question));
+  if (t.ru) c.append(el('div', 'ru', '🇷🇺 ' + t.ru));
+
+  if (t.kind === 'choice') {
+    const opts = el('div'); opts.id = 'task-opts';
+    t.options.forEach((o, i) => {
+      const b = el('button', 'opt'); b.type = 'button';
+      b.append(el('b', null, LETTERS[i]), el('span', null, o));
+      b.onclick = () => submitAnswer(i);
+      opts.append(b);
+    });
+    c.append(opts);
+  } else {
+    const inp = el(t.kind === 'judge' ? 'textarea' : 'input');
+    inp.id = 'task-input'; inp.maxLength = 1000; inp.autocomplete = 'off';
+    if (t.kind === 'judge') inp.classList.add('tall');
+    inp.placeholder = t.kind === 'blank' ? 'Пропущенное слово или форма…' : 'Твой ответ…';
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitText(); } });
+    const send = btn('Проверить', 'btn mt', submitText); send.id = 'task-send';
+    c.append(el('div', 'gap'), inp, send);
+  }
+  const hints = el('div'); hints.id = 'task-hints'; c.append(hints);
+  const tools = el('div', 'tools'); tools.id = 'task-tools';
+  const hb = btn('💡 Подсказка', 'btn secondary', getHint); hb.id = 'btn-hint'; tools.append(hb);
+  if (t.skip) tools.append(btn('⏭ Пропустить', 'btn secondary', skipTask)); else tools.style.gridTemplateColumns = '1fr';
+  c.append(tools);
+  const res = el('div'); res.id = 'task-result'; c.append(res);
+  $('#task-area').replaceChildren(c);
+}
+
+function setTaskDisabled(d) {
+  document.querySelectorAll('#task-area .opt, #task-input, #task-send, #task-tools button').forEach(x => x.disabled = d);
+}
+function submitText() {
+  const i = $('#task-input'), v = i ? i.value.trim() : '';
+  if (!v) return toast('Напиши ответ');
+  submitAnswer(v);
+}
+async function submitAnswer(answer) {
+  const t = state.task;
+  if (!t || t.answered || state.busy) return;
+  state.busy = true; tap(); setTaskDisabled(true);
+  const send = $('#task-send');
+  if (send) send.textContent = 'Проверяю…';
+  try {
+    const r = await api('task/answer', {id: t.id, answer});
+    t.answered = true;
+    showResult(r, answer, false);
+  } catch (e) {
+    if (e.code === 'stale') t.answered = true; else setTaskDisabled(false);
+    if (send) send.textContent = 'Проверить';
+    $('#task-result').replaceChildren(errorCard(e, e.code === 'stale' ? newTask : null));
+  } finally {
+    state.busy = false;
+  }
+}
+
+function showResult(r, answer, skipped) {
+  const t = state.task, m = state.mode;
+  if (!skipped) haptic(r.ok ? 'success' : 'error');
+  if (t.kind === 'choice' && r.correct_idx != null) {
+    document.querySelectorAll('#task-opts .opt').forEach((b, i) => {
+      if (i === r.correct_idx) b.classList.add('ok');
+      else if (i === answer && !r.ok) b.classList.add('bad');
+    });
+  }
+  setTaskDisabled(true);
+  const send = $('#task-send'); if (send) send.hidden = true;
+  $('#task-tools').hidden = true;
+
+  const box = el('div', 'result ' + (r.ok ? 'ok' : 'bad'));
+  box.append(el('div', 'res-title', skipped ? '⏭ Пропущено' : r.ok ? '✅ Верно!' : '❌ Не совсем'));
+  if (!r.ok) box.append(el('div', null, 'Правильный ответ: ' + r.answer));
+  if (r.feedback) box.append(el('div', 'mt', '💬 ' + r.feedback));
+  if (r.better) box.append(el('div', 'mt', '🔥 Натуральнее: ' + r.better));
+  if (r.explanation) box.append(el('div', 'muted mt', '📖 ' + r.explanation));
+  if (!skipped) box.append(el('div', 'muted mt', `📊 ${r.done} решено · ${r.correct} верно`));
+  if (r.trial_html) box.append(rich('div', 'mt', r.trial_html));
+  acts(box, [actTranslate(t.question + '\n' + r.answer)]);
+  const res = $('#task-result'); res.replaceChildren(box);
+
+  const nav = el('div', 'stack'), L = r.lesson;
+  if (r.topic && !r.ok && m.mode === 'free') nav.append(btn('📖 ' + r.topic.title, 'btn secondary', () => openTopic(r.topic.id)));
+  if (L) {
+    renderBanner(L);
+    if (L.finished) {
+      const fin = el('div', 'card center mt');
+      fin.append(el('div', 'big', L.passed ? '🏆' : '😔'), el('div', 'card-title', 'Урок завершён'),
+        el('div', null, `Верно: ${L.correct}/${L.total}`), el('div', 'muted mt', L.note));
+      res.append(fin);
+      if (!L.passed) nav.append(btn('🔁 Пересдать урок', 'btn', () => startLesson(L.level, L.idx)));
+      nav.append(btn('🎓 К урокам уровня', L.passed ? 'btn' : 'btn secondary', () => {
+        state.courseLevel = L.level; state.learnTab = 'course'; setMode({mode: 'free'}); show('learn');
+      }));
+    } else nav.append(btn('▶️ Следующее задание', 'btn', newTask));
+  } else if (m.mode === 'quiz') {
+    nav.append(btn('🔁 Пересдать', 'btn', newTask),
+      btn('📖 Все темы', 'btn secondary', () => { state.learnTab = 'ref'; setMode({mode: 'free'}); show('learn'); }));
+  } else nav.append(btn('🧩 Следующее', 'btn', newTask));
+  res.append(nav);
+  refreshMe();
+  res.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+}
+
+async function getHint() {
+  const t = state.task;
+  if (!t || t.answered) return;
+  const b = $('#btn-hint'); b.disabled = true;
+  try {
+    const r = await api('task/hint', {id: t.id});
+    $('#task-hints').append(el('div', 'hint', `💡 ${r.n}. ${r.text}`));
+    if (r.left <= 0) b.textContent = '💡 Подсказок больше нет'; else b.disabled = false;
+    refreshMe();
+  } catch (e) {
+    if (e.code === 'limit' || e.code === 'paywall') $('#task-hints').append(errorCard(e));
+    else { toast(plain(e.html)); if (e.code !== 'no_hints') b.disabled = false; }
+  }
+}
+async function skipTask() {
+  const t = state.task;
+  if (!t || t.answered || state.busy) return;
+  state.busy = true;
+  try {
+    const r = await api('task/skip', {id: t.id});
+    t.answered = true;
+    showResult({...r, ok: false}, null, true);
+  } catch (e) { toast(plain(e.html)); }
+  finally { state.busy = false; }
+}
+
+// ---------- учёба ----------
+async function loadLearn() {
+  const token = ++state.learnToken, a = $('#learn-area');
+  document.querySelectorAll('[data-learn]').forEach(x => x.classList.toggle('active', x.dataset.learn === state.learnTab));
+  a.replaceChildren(loadingCard());
+  try {
+    const d = await api(state.learnTab === 'course' ? 'course' : 'topics');
+    if (token !== state.learnToken) return;
+    if (d.locked) return a.replaceChildren(lockedCard(d.paywall));
+    state.learnTab === 'course' ? renderCourse(d) : renderTopics(d);
+  } catch (e) {
+    if (token === state.learnToken) a.replaceChildren(errorCard(e, loadLearn));
+  }
+}
+function renderCourse(d) {
+  const a = $('#learn-area');
+  const known = d.levels.find(l => l.level === state.courseLevel && l.open);
+  if (!known) state.courseLevel = (d.levels.filter(l => l.open).pop() || d.levels[0]).level;
+  const chips = el('div', 'chips');
+  d.levels.forEach(l => {
+    const c = btn(`${l.open ? '' : '🔒 '}${l.level} · ${l.done}/${l.total}`, 'chip' + (l.level === state.courseLevel ? ' active' : ''), () => {
+      if (!l.open) return toast('Сначала полностью пройди предыдущий уровень!');
+      tap(); state.courseLevel = l.level; renderCourse(d);
+    });
+    chips.append(c);
+  });
+  const lvl = d.levels.find(l => l.level === state.courseLevel);
+  const card = el('div', 'card'), top = el('div', 'row-between');
+  top.append(el('div', 'card-title', `📚 Уровень ${lvl.level}`), el('span', 'muted', `${lvl.done} из ${lvl.total} уроков`));
+  card.append(top, bar(lvl.total ? lvl.done / lvl.total : 0),
+    el('div', 'muted mt', 'Каждый урок = теория + 3 задания. Уроки открываются по порядку.'));
+  const list = el('div');
+  lvl.lessons.forEach(ls => {
+    const it = el('div', 'list-item' + (ls.open ? '' : ' disabled'));
+    it.append(el('span', 'li-title', `${ls.idx + 1}. ${ls.title}`), el('span', null, ls.done ? '✅' : (ls.open ? '▶️' : '🔒')));
+    it.onclick = () => ls.open ? openLesson(lvl.level, ls.idx) : toast('Сначала успешно заверши предыдущий урок!');
+    list.append(it);
+  });
+  a.replaceChildren(chips, card, list);
+}
+async function openLesson(level, idx) {
+  try {
+    const d = await api('lesson/open', {level, idx});
+    const node = el('div');
+    node.append(rich('div', 'card theory', d.html),
+      el('div', 'muted', 'Для зачёта нужно ответить верно минимум на 2 задания из 3.'),
+      btn('▶️ Начать урок', 'btn mt', () => startLesson(level, idx)));
+    openSheet(`🎓 ${d.level} · Урок ${d.num}`, node);
+  } catch (e) { toast(plain(e.html)); if (e.code === 'paywall') goPricing(); }
+}
+async function startLesson(level, idx) {
+  try {
+    const d = await api('lesson/start', {level, idx});
+    closeSheet();
+    state.mode = {mode: 'lesson', level, idx, title: d.title, info: d.lesson};
+    state.task = null;
+    show('tasks');
+    renderBanner(d.lesson);
+    newTask();
+  } catch (e) { toast(plain(e.html)); if (e.code === 'paywall') goPricing(); }
+}
+function renderTopics(d) {
+  const a = $('#learn-area'), search = el('input'), list = el('div', 'mt');
+  search.placeholder = '🔍 Поиск темы…';
+  const icon = s => s === true ? '✅' : s === false ? '❌' : '⚪️';
+  const draw = () => {
+    const q = search.value.trim().toLowerCase();
+    list.replaceChildren();
+    let cur = null;
+    d.items.filter(i => !q || i.title.toLowerCase().includes(q)).forEach(i => {
+      if (i.level !== cur) { cur = i.level; list.append(el('div', 'muted mt', cur)); }
+      const it = el('div', 'list-item');
+      it.append(el('span', 'li-title', i.title), el('span', null, icon(i.status)));
+      it.onclick = () => openTopic(i.id);
+      list.append(it);
+    });
+    if (!list.children.length) list.append(el('div', 'muted center', 'Ничего не найдено'));
+  };
+  search.oninput = draw;
+  draw();
+  a.replaceChildren(el('div', 'muted', '✅ пройдена · ❌ провалена · ⚪️ не начата'), el('div', 'gap'), search, list);
+}
+async function openTopic(id) {
+  try {
+    const d = await api('topic', {id});
+    const node = el('div');
+    node.append(rich('div', 'card theory', d.html));
+    const row = el('div'); node.append(row);
+    acts(row, [actTranslate(plain(d.html))]);
+    if (d.quiz) node.append(btn('📝 Пройти тест по теме', 'btn mt', () => startQuiz(id, d.title)));
+    openSheet(d.title, node);
+  } catch (e) { toast(plain(e.html)); if (e.code === 'paywall') goPricing(); }
+}
+function startQuiz(id, title) {
+  closeSheet();
+  setMode({mode: 'quiz', topic: id, title});
+  show('tasks');
+  newTask();
+}
+
+// ---------- практика ----------
+function showPractice(tab) {
+  state.practiceTab = tab;
+  document.querySelectorAll('[data-practice]').forEach(b => b.classList.toggle('active', b.dataset.practice === tab));
+  document.querySelectorAll('.panel').forEach(p => p.hidden = p.id !== 'p-' + tab);
+  if (!state.inited[tab]) {
+    state.inited[tab] = true;
+    ({chat: initChat, rp: initRp, roast: initRoast, tracks: initTracks})[tab]();
+  }
+}
+
+// Общий чат-компонент: лента сообщений и поле ввода
+function makeChat(root, opts) {
+  const log = el('div', 'chat'), form = el('form', 'composer'), ta = el('textarea'), send = el('button', 'btn', '➤');
+  ta.maxLength = 1000; ta.placeholder = opts.placeholder; send.type = 'submit';
+  form.append(ta, send);
+  root.append(log, form);
+  let busy = false;
+  const chat = {
+    add(who, content) {
+      const m = el('div', 'msg ' + who);
+      if (content.html != null) m.innerHTML = content.html; else m.textContent = content.text;
+      log.append(m);
+      m.scrollIntoView({behavior: 'smooth', block: 'end'});
+      return m;
+    },
+    clear() { log.replaceChildren(); },
+  };
+  ta.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); form.requestSubmit(); } });
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    const text = ta.value.trim();
+    if (!text || busy) return;
+    busy = true; ta.value = '';
+    chat.add('me', {text});
+    const node = chat.add('bot', {html: TYPING});
+    try { await opts.onSend(text, node); }
+    catch (err) {
+      node.replaceChildren(errorBox(err));
+      if (!['limit', 'paywall', 'guard'].includes(err.code)) ta.value = text;
+    } finally {
+      busy = false;
+      node.scrollIntoView({behavior: 'smooth', block: 'end'});
+    }
+  };
+  return chat;
+}
+
+function initChat() {
+  const root = $('#p-chat');
+  root.replaceChildren();
+  const head = el('div', 'row-between');
+  root.append(head);
+  const chat = makeChat(root, {placeholder: 'Write in English…', onSend: async (text, node) => {
+    const r = await api('chat', {text});
+    node.innerHTML = r.html;
+    acts(node, [actSpeak(r.text), actTranslate(r.text), actBetter(text)]);
+    refreshMe();
+  }});
+  const greet = () => chat.add('bot', {html: '🚀 <b>Yo! I\'m all ears.</b> Пиши на английском!\n\n• <i>Man, my boss is tweaking today.</i>\n• <i>Should I cop these sneakers or save my bread?</i>'});
+  head.append(el('div', 'muted', '⚠️ В диалоге только английский'),
+    btn('Очистить', 'link', async () => { try { await api('chat/reset'); } catch (e) {} chat.clear(); greet(); }));
+  greet();
+}
+
+async function initRp() {
+  const a = $('#rp-area');
+  a.replaceChildren(loadingCard());
+  try {
+    const d = await api('roleplay/list');
+    if (d.locked) { state.inited.rp = false; return a.replaceChildren(lockedCard(d.paywall)); }
+    const list = el('div');
+    list.append(el('div', 'muted', 'Выбери ситуацию. Отвечай только на английском.'), el('div', 'gap'));
+    d.items.forEach(s => {
+      const it = el('div', 'list-item');
+      it.append(el('span', 'li-title', s.button), el('span', 'muted', '›'));
+      it.onclick = () => startRp(s.id);
+      list.append(it);
+    });
+    a.replaceChildren(list);
+  } catch (e) { state.inited.rp = false; a.replaceChildren(errorCard(e, initRp)); }
+}
+async function startRp(id) {
+  const a = $('#rp-area');
+  try {
+    const d = await api('roleplay/start', {id});
+    const head = el('div', 'row-between');
+    head.append(el('div', 'card-title', `${d.intro} ${d.name}`), btn('🏁 Завершить', 'mini', finishRp));
+    const box = el('div');
+    a.replaceChildren(head, box);
+    const chat = makeChat(box, {placeholder: 'Your answer in English…', onSend: async (text, node) => {
+      const r = await api('roleplay/say', {text});
+      node.innerHTML = r.html;
+      acts(node, [actSpeak(r.text), actTranslate(r.text), actBetter(text)]);
+    }});
+    const first = chat.add('bot', {text: `“${d.start}”`});
+    acts(first, [actSpeak(d.start), actTranslate(d.start)]);
+    chat.add('note', {text: d.ask});
+  } catch (e) {
+    toast(plain(e.html));
+    if (e.code === 'paywall') { state.inited.rp = false; initRp(); }
+  }
+}
+async function finishRp() {
+  const a = $('#rp-area');
+  a.replaceChildren(loadingCard('Подвожу итоги…'));
+  try {
+    const r = await api('roleplay/finish');
+    const c = el('div', 'card');
+    c.append(el('div', 'card-title', '🏁 Итог'), rich('div', 'theory', r.html), btn('🎭 Другая сцена', 'btn mt', initRp));
+    a.replaceChildren(c);
+  } catch (e) { a.replaceChildren(errorCard(e, initRp)); }
+}
+
+function initRoast() {
+  const root = $('#p-roast');
+  if (!state.me || !state.me.features.roast) {
+    state.inited.roast = false;
+    const holder = el('div'); root.replaceChildren(holder);
+    return lockedFor('roast', holder);
+  }
+  root.replaceChildren();
+  const chat = makeChat(root, {placeholder: 'Your English phrase…', onSend: async (text, node) => {
+    const r = await api('roast', {text});
+    node.innerHTML = r.html;
+    acts(node, [['🔥 Как сказать лучше?', async (b, p) => { const x = await api('roast/better', {text}); sub(p, x.html); b.remove(); }]]);
+  }});
+  chat.add('bot', {html: '🔥 <b>ROAST MY ENGLISH</b>\n\nНапиши любую фразу или текст на английском: прожарю по-доброму и покажу, как сказать круче.'});
+}
+
+function initTracks() {
+  const a = $('#tracks-area');
+  if (!state.me || !state.me.features.video) { state.inited.tracks = false; return lockedFor('video', a); }
+  const seg = el('div', 'seg');
+  [['video', '🎬 Видео'], ['audio', '🎧 Аудио']].forEach(([k, l]) => {
+    const b = btn(l, null, () => loadMedia(k, 0)); b.dataset.kind = k; seg.append(b);
+  });
+  const body = el('div'); body.id = 'media-body';
+  body.append(el('div', 'card muted', 'Выбери видео или аудио. Посмотри отрывок, переведи строчки и найди сленг.'));
+  a.replaceChildren(seg, body);
+}
+async function loadMedia(kind, index) {
+  document.querySelectorAll('#tracks-area [data-kind]').forEach(b => b.classList.toggle('active', b.dataset.kind === kind));
+  const body = $('#media-body');
+  body.replaceChildren(loadingCard());
+  const what = kind === 'video' ? 'видео' : 'аудио';
+  try {
+    const d = await api('media/get', {kind, index});
+    if (!d.count) return body.replaceChildren(el('div', 'card center', `${kind === 'video' ? '🎬' : '🎧'} Пока нет загруженных ${what}.`));
+    if (d.done) {
+      const c = el('div', 'card center');
+      c.append(el('div', 'card-title', `🏁 Это было последнее ${what}.`), btn('С начала', 'btn mt', () => loadMedia(kind, 0)));
+      return body.replaceChildren(c);
+    }
+    renderMedia(kind, d);
+  } catch (e) { body.replaceChildren(errorCard(e, () => loadMedia(kind, index))); }
+}
+function renderMedia(kind, d) {
+  const body = $('#media-body'), c = el('div', 'card');
+  c.append(el('div', 'card-title', `${kind === 'video' ? '🎬 ВИДЕО' : '🎧 АУДИО'} ${d.index + 1}/${d.count}`));
+  const player = el(kind === 'video' ? 'video' : 'audio', 'player');
+  player.controls = true; player.preload = 'metadata'; player.setAttribute('playsinline', ''); player.src = d.url;
+  const perr = el('div', 'muted mt'); perr.hidden = true;
+  player.onerror = () => {
+    perr.hidden = false;
+    perr.textContent = '⚠️ Файл не загрузился. Telegram отдаёт ботам файлы до 20 МБ, а голосовые в формате ogg не играют на iPhone.';
+  };
+  c.append(player, perr,
+    el('div', 'theory mt', '👇 Напиши:\n1. Как переводятся эти строчки?\n2. Какую устойчивую фразу или сленг ты услышал и что она значит?'));
+  const extra = el('div');
+  acts(c, [
+    ['🇷🇺 Перевод строчек', async (b) => { const r = await api('media/translate'); sub(extra, '🇷🇺 ' + r.html); b.remove(); }],
+    ['❓ Вопрос по тексту', async () => { const r = await api('media/question'); sub(extra, '❓ ' + r.html); }],
+    ['⏭ Следующее', () => loadMedia(kind, d.index + 1)],
+  ]);
+  c.append(extra);
+  const ta = el('textarea', 'tall'); ta.maxLength = 1000; ta.placeholder = 'Твой ответ…';
+  const out = el('div');
+  const check = btn('Проверить', 'btn mt', () => run(check, async () => {
+    const v = ta.value.trim();
+    if (!v) return toast('Напиши ответ');
+    check.textContent = 'Проверяю…';
+    try {
+      const r = await api('media/answer', {text: v});
+      const box = rich('div', 'result', r.html);
+      out.replaceChildren(box);
+      acts(box, [
+        ['📖 Разбор выражения', async (b, p) => { const x = await api('media/phrase'); sub(p, x.html); b.remove(); }],
+        ['⏭ Следующее', () => loadMedia(kind, d.index + 1)],
+      ]);
+    } finally { check.textContent = 'Проверить'; }
+  }));
+  c.append(el('div', 'gap'), ta, check, out);
+  body.replaceChildren(c);
+}
+
+// ---------- профиль, уровень, тарифы ----------
+function renderProfile() {
+  const m = state.me, a = $('#profile-area');
+  if (!m) return;
+  const u = tgUser(), head = el('div', 'card profile-head'), info = el('div');
+  head.append(el('div', 'avatar', (u.first_name || '?').slice(0, 1).toUpperCase()));
+  info.append(el('div', 'card-title', [u.first_name, u.last_name].filter(Boolean).join(' ') || 'Ученик'),
+    el('div', 'muted', m.sub_label + (m.trial.active ? ' (пробный)' : '') + (m.expires ? ` · до ${m.expires}` : '')));
+  head.append(info);
+
+  const lvl = el('div', 'card');
+  lvl.append(el('div', 'muted', '🎯 Уровень'), el('div', 'phrase', m.level), el('div', null, '📈 ' + m.level_progress));
+  m.levels.forEach(l => {
+    const row = el('div', 'limit'), top = el('div', 'row-between');
+    top.append(el('span', null, l.level), el('span', 'muted', `${l.points >= l.max ? '✅' : '⏳'} ${l.points}/${l.max}`));
+    row.append(top, bar(l.points / l.max));
+    lvl.append(row);
+  });
+  const lim = m.limits.level;
+  lvl.append(btn('🎯 Пройти тест уровня', 'btn mt', startLevelTest),
+    el('div', 'muted center mt', lim.limit == null ? 'Тест без ограничений' : `Тестов сегодня: ${lim.used}/${lim.limit}`));
+
+  const stats = el('div', 'stats');
+  [['🧩', 'Решено', m.stats.done], ['✅', 'Верно', m.stats.correct], ['🎯', 'Точность', m.stats.accuracy + '%'],
+   ['🔥', 'Страйк', m.streak + ' дн.'], ['📅', 'Активных дней', m.active_days], ['📝', 'Выдано заданий', m.stats.issued]]
+    .forEach(([ic, label, val]) => { const s = el('div', 'stat'); s.append(el('span', 'muted', `${ic} ${label}`), el('b', null, String(val))); stats.append(s); });
+  a.replaceChildren(head, lvl, stats);
+}
+
+async function startLevelTest() {
+  try {
+    const d = await api('level/start');
+    const node = el('div'), log = el('div'), cur = el('div');
+    node.append(el('div', 'muted', '3 фразы от простой к сложной. Переведи каждую на естественный английский.'), el('div', 'gap'), log, cur);
+    openSheet('🎯 Оценка уровня', node);
+    const step = (s) => {
+      const c = el('div', 'card'), ta = el('textarea', 'tall');
+      c.append(el('span', 'tag', `Шаг ${s.step}/${s.total} · ${s.stage}`), el('div', 'question', `«${s.phrase}»`));
+      ta.maxLength = 1000; ta.placeholder = 'Твой перевод на английском…';
+      const b = btn('Ответить', 'btn mt', () => run(b, async () => {
+        const v = ta.value.trim();
+        if (!v) return toast('Напиши перевод');
+        b.textContent = 'Проверяю…';
+        try {
+          const r = await api('level/answer', {text: v});
+          c.replaceChildren(el('span', 'tag', `Шаг ${s.step}/${s.total}`), el('div', 'muted mt', `«${s.phrase}»`),
+            el('div', 'mt', 'Ты: ' + v), rich('div', 'result', r.review_html));
+          log.append(c);
+          if (r.next) step(r.next);
+          else {
+            const f = el('div', 'card center');
+            f.append(el('div', 'big', '🏆'), el('div', 'card-title', 'Тест завершён!'),
+              el('div', null, `Набрано баллов: ${r.final.score}/6`), el('div', 'phrase', r.final.level),
+              el('div', 'muted', r.final.progress), btn('Готово', 'btn mt', closeSheet));
+            cur.replaceChildren(f);
+            haptic('success');
+            refreshMe();
+          }
+        } finally { b.textContent = 'Ответить'; }
+      }));
+      c.append(ta, b);
+      cur.replaceChildren(c);
+    };
+    step(d);
+    refreshMe();
+  } catch (e) { toast(plain(e.html)); if (e.code === 'limit') goPricing(); }
+}
+
+async function loadPricing() {
+  try { state.pricing = await api('pricing'); renderPricing(); }
+  catch (e) { $('#pricing-area').replaceChildren(errorCard(e, loadPricing)); }
+}
+function renderPricing() {
+  const d = state.pricing, a = $('#pricing-area');
+  a.replaceChildren(el('h2', 'mt', '💳 Тарифы'));
+  const free = el('div', 'card');
+  free.append(el('div', 'tier-title', '🆓 FREE' + (d.current === 'free' ? ' · сейчас' : '')), el('div', 'theory muted', d.free));
+  a.append(free);
+  d.tiers.forEach(t => {
+    const c = el('div', 'card tier-' + t.id);
+    c.append(el('div', 'tier-title', t.label + (d.current === t.id ? ' · активен' : '')), el('div', 'theory muted', t.features));
+    if (!t.available) c.append(el('div', 'muted mt', 'У тебя уже активен платный PRO.'));
+    else t.prices.forEach(p => {
+      const b = el('button', 'price-row'); b.type = 'button';
+      b.append(el('span', null, monthsLabel(p.months)), el('b', null, `${p.rub} ₽`));
+      b.onclick = () => run(b, () => buy(t.id, p.months));
+      c.append(b);
+    });
+    a.append(c);
+  });
+  a.append(el('div', 'muted center', 'Оплата проходит через Telegram. Доступ включается сразу после оплаты.'));
+}
+async function buy(plan, months) {
+  const r = await api('invoice', {plan, months});
+  const done = (status) => {
+    if (status === 'paid') {
+      haptic('success'); toast('🔥 Оплата прошла!');
+      setTimeout(afterPay, 1500); setTimeout(afterPay, 5000);
+    } else if (status === 'failed') toast('Оплата не прошла');
+  };
+  if (tg.openInvoice) tg.openInvoice(r.url, done); else tg.openTelegramLink(r.url);
+}
+async function afterPay() { await refreshMe(); loadPricing(); }
+
+// ---------- запуск ----------
+const GO = {
+  tasks: () => show('tasks'), learn: () => show('learn'), chat: () => goPractice('chat'),
+  rp: () => goPractice('rp'), tracks: () => goPractice('tracks'), level: startLevelTest,
+};
+document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => { tap(); show(b.dataset.view); });
+document.querySelectorAll('[data-go]').forEach(b => b.onclick = () => { tap(); GO[b.dataset.go](); });
+document.querySelectorAll('[data-learn]').forEach(b => b.onclick = () => { tap(); state.learnTab = b.dataset.learn; loadLearn(); });
+document.querySelectorAll('[data-practice]').forEach(b => b.onclick = () => { tap(); showPractice(b.dataset.practice); });
+$('#sheet-close').onclick = closeSheet;
+resetTaskArea();
+
+if (tg) {
+  tg.ready();
+  tg.expand();
+  try { tg.BackButton.onClick(closeSheet); } catch (e) {}
+  try { tg.setHeaderColor('secondary_bg_color'); } catch (e) {}
+}
+loadMe();
+</script>
+</body>
+</html>
